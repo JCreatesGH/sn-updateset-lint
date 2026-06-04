@@ -1,0 +1,20 @@
+<unload unload_date="2026-06-01">
+  <sys_update_xml action="INSERT_OR_UPDATE">
+    <name>sys_script_aaa111</name>
+    <type>Business Rule</type>
+    <target_name>incident</target_name>
+    <payload>&lt;record&gt;current.update();&lt;/record&gt;</payload>
+  </sys_update_xml>
+  <sys_update_xml action="INSERT_OR_UPDATE">
+    <name>sys_security_acl_bbb222</name>
+    <type>ACL</type>
+    <target_name>incident.number</target_name>
+    <payload>&lt;record&gt;answer=true;&lt;/record&gt;</payload>
+  </sys_update_xml>
+  <sys_update_xml action="INSERT_OR_UPDATE">
+    <name>sys_script_ccc333</name>
+    <type>Business Rule</type>
+    <target_name></target_name>
+    <payload>&lt;record&gt;gs.eval(current.script); var u='https://acme.service-now.com';&lt;/record&gt;</payload>
+  </sys_update_xml>
+</unload>

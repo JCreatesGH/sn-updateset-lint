@@ -1,0 +1,20 @@
+<unload unload_date="2026-06-02">
+  <sys_update_xml action="INSERT_OR_UPDATE">
+    <name>sys_script_aaa111</name>
+    <type>Business Rule</type>
+    <target_name>incident</target_name>
+    <payload>&lt;record&gt;current.update(); // edited&lt;/record&gt;</payload>
+  </sys_update_xml>
+  <sys_update_xml action="DELETE">
+    <name>sys_script_ccc333</name>
+    <type>Business Rule</type>
+    <target_name></target_name>
+    <payload></payload>
+  </sys_update_xml>
+  <sys_update_xml action="INSERT_OR_UPDATE">
+    <name>sys_script_ddd444</name>
+    <type>Script Include</type>
+    <target_name>Utils</target_name>
+    <payload>&lt;record&gt;current.setWorkflow(false);&lt;/record&gt;</payload>
+  </sys_update_xml>
+</unload>
