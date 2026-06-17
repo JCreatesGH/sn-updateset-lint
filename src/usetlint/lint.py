@@ -50,10 +50,25 @@ def lint(changes: List[Change]) -> List[Finding]:
             findings.append(Finding("high", "dynamic-eval", c.name,
                 "Uses dynamic evaluation (gs.eval / new Function) — injection risk."))
 
+        # current.update() inside a Business Rule re-triggers rules — classic recursion footgun.
+        if "business rule" in t and _has(c.payload, "current.update("):
+            findings.append(Finding("medium", "current-update-in-br", c.name,
+                "current.update() inside a Business Rule can recurse — set fields and let the engine save."))
+
+        # Scheduled jobs run automatically once promoted.
+        if "scheduled" in t:
+            findings.append(Finding("medium", "scheduled-job", c.name,
+                "Scheduled job/script runs automatically — verify its schedule and active state."))
+
         # setWorkflow(false) skips business rules silently.
         if _has(c.payload, "setworkflow(false)"):
             findings.append(Finding("low", "setworkflow-false", c.name,
                 "setWorkflow(false) suppresses business rules — make sure that is deliberate."))
+
+        # Leftover debug-only logging that does nothing useful in prod.
+        if _has(c.payload, "console.log(", "gs.print("):
+            findings.append(Finding("info", "debug-logging", c.name,
+                "Leftover debug logging (console.log / gs.print) in promoted code."))
 
     findings.sort(key=lambda f: -SEVERITY[f.severity])
     return findings

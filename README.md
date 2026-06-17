@@ -20,17 +20,21 @@ pip install usetlint
 usetlint promote_to_prod.xml
 ```
 
-It reports findings by severity and **exits non-zero on any HIGH finding**, so a pipeline can block a risky promotion:
+It reports findings by severity and **exits non-zero on any HIGH finding** (tune with `--fail-on {none,low,medium,high}`), so a pipeline can block a risky promotion:
 
 ```yaml
 - run: pip install usetlint && usetlint update_set.xml
 ```
 
+Other flags: `--json` (machine-readable for CI), `--min-severity {info,low,medium,high}` (hide noise).
+
 ## Diff two sets
 
 ```bash
-usetlint dev.xml prod.xml      # added / removed / changed by record
+usetlint old.xml new.xml      # added / removed / changed by record
 ```
+
+The diff also **risk-lints only what the promotion introduces** — the added and changed entries — so review focuses on *new* risk instead of re-flagging what already shipped. Exit code gates on those new findings. A change is detected on any of action / type / target / payload (so a flip to `DELETE` or a retarget is never missed).
 
 ## Rules
 
@@ -41,19 +45,23 @@ usetlint dev.xml prod.xml      # added / removed / changed by record
 | HIGH | `dynamic-eval` | `gs.eval` / `new Function` injection smells |
 | MEDIUM | `record-delete` | DELETE actions riding along in a promotion |
 | MEDIUM | `hardcoded-reference` | Hardcoded instance URLs / credential-like strings |
+| MEDIUM | `current-update-in-br` | `current.update()` inside a Business Rule (recursion risk) |
+| MEDIUM | `scheduled-job` | Scheduled jobs/scripts that run automatically once promoted |
 | LOW | `setworkflow-false` | `setWorkflow(false)` silently skipping business rules |
+| INFO | `debug-logging` | Leftover `console.log` / `gs.print` debug statements |
 
 ## Library
 
 ```python
-from usetlint import parse_update_set, lint, diff_update_sets
+from usetlint import parse_update_set, lint, diff_update_sets, lint_diff
 findings = lint(parse_update_set(open("set.xml").read()))
+new_risk = lint_diff(old_changes, new_changes)   # only added/changed entries
 ```
 
 ## Development
 
 ```bash
-python -m pytest -q   # 6 tests
+pip install -e .[dev] && python -m pytest -q   # 17 tests
 ```
 
 ## License

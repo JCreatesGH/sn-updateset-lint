@@ -4,13 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "usetlint"
-version = "0.1.0"
+version = "0.2.0"
 description = "Diff and risk-lint ServiceNow Update Set XML exports before you promote them."
 readme = "README.md"
 authors = [{ name = "Joshua John", email = "josh202@gmail.com" }]
 requires-python = ">=3.8"
 license = { text = "MIT" }
 keywords = ["servicenow", "update-set", "lint", "change-management", "devops"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
 
 [project.scripts]
 usetlint = "usetlint.cli:main"
