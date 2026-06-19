@@ -56,3 +56,30 @@ def test_debug_logging_is_info_only():
     findings = lint(parse_update_set(xml))
     assert "debug-logging" in rules(findings)
     assert all(f.severity != "high" for f in findings)
+
+
+def _one(name, typ, payload, action="INSERT_OR_UPDATE", target="x"):
+    xml = (f'<unload><sys_update_xml action="{action}"><name>{name}</name>'
+           f'<type>{typ}</type><target_name>{target}</target_name>'
+           f'<payload>&lt;record&gt;{payload}&lt;/record&gt;</payload></sys_update_xml></unload>')
+    return lint(parse_update_set(xml))
+
+
+def test_mass_delete_is_high():
+    f = _one("sys_script_md", "Business Rule", "var gr = new GlideRecord('incident'); gr.deleteMultiple();")
+    hits = [x for x in f if x.rule == "mass-delete"]
+    assert hits and hits[0].severity == "high"
+    # a plain deleteRecord on a single record is not flagged as mass-delete
+    assert "mass-delete" not in rules(_one("sys_script_dr", "Script Include", "gr.deleteRecord();"))
+
+
+def test_data_record_flagged():
+    assert "data-record" in rules(_one("sys_user_abc123", "User", "x"))
+    assert "data-record" in rules(_one("cmdb_ci_server_def456", "Server CI", "x"))
+    # configuration records are not data records
+    assert "data-record" not in rules(_one("sys_ui_policy_x", "UI Policy", "x"))
+
+
+def test_property_change_flagged():
+    # name `sys_properties_<sysid>` derives table "sys_properties"
+    assert "property-change" in rules(_one("sys_properties_abc123", "System Property", "x"))

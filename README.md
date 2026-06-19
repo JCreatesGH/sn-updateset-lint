@@ -43,10 +43,13 @@ The diff also **risk-lints only what the promotion introduces** — the added an
 | HIGH | `global-business-rule` | Business Rules with no/global target table |
 | HIGH | `acl-change` | Modified `sys_security_acl` records |
 | HIGH | `dynamic-eval` | `gs.eval` / `new Function` injection smells |
+| HIGH | `mass-delete` | `deleteMultiple()` in promoted code — can wipe a whole table |
 | MEDIUM | `record-delete` | DELETE actions riding along in a promotion |
 | MEDIUM | `hardcoded-reference` | Hardcoded instance URLs / credential-like strings |
 | MEDIUM | `current-update-in-br` | `current.update()` inside a Business Rule (recursion risk) |
 | MEDIUM | `scheduled-job` | Scheduled jobs/scripts that run automatically once promoted |
+| MEDIUM | `data-record` | instance data (users, groups, CIs, tickets) shipped as config |
+| MEDIUM | `property-change` | a `sys_properties` change that flips behavior/security instance-wide |
 | LOW | `setworkflow-false` | `setWorkflow(false)` silently skipping business rules |
 | INFO | `debug-logging` | Leftover `console.log` / `gs.print` debug statements |
 
@@ -61,7 +64,7 @@ new_risk = lint_diff(old_changes, new_changes)   # only added/changed entries
 ## Development
 
 ```bash
-pip install -e .[dev] && python -m pytest -q   # 17 tests
+pip install -e .[dev] && python -m pytest -q   # 20 tests
 ```
 
 ## License

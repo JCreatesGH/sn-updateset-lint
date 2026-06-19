@@ -20,6 +20,12 @@ def _has(payload: str, *needles: str) -> bool:
     return any(n.lower() in low for n in needles)
 
 
+# Instance *data* tables that almost never belong in a promoted Update Set (config only).
+_DATA_TABLES = {"sys_user", "sys_user_group", "sys_user_role", "sys_user_grmember",
+                "incident", "problem", "change_request", "task", "sc_request", "sc_req_item",
+                "kb_knowledge", "sys_email"}
+
+
 def lint(changes: List[Change]) -> List[Finding]:
     findings: List[Finding] = []
     for c in changes:
@@ -69,6 +75,22 @@ def lint(changes: List[Change]) -> List[Finding]:
         if _has(c.payload, "console.log(", "gs.print("):
             findings.append(Finding("info", "debug-logging", c.name,
                 "Leftover debug logging (console.log / gs.print) in promoted code."))
+
+        # A GlideRecord.deleteMultiple() in promoted code can wipe a whole table.
+        if _has(c.payload, "deletemultiple("):
+            findings.append(Finding("high", "mass-delete", c.name,
+                "deleteMultiple() in promoted code can delete every matching record — verify the query is scoped."))
+
+        # Instance data records (users, groups, CIs, tickets) usually shouldn't ride a promotion.
+        table = c.table.lower()
+        if table in _DATA_TABLES or table.startswith("cmdb_ci"):
+            findings.append(Finding("medium", "data-record", c.name,
+                f"Carries an instance data record ('{c.table}') — promote configuration, not data."))
+
+        # System property changes can flip behavior/security across the whole instance.
+        if table == "sys_properties" or "property" in t:
+            findings.append(Finding("medium", "property-change", c.name,
+                "Changes a system property — it can alter behavior or security instance-wide on promotion."))
 
     findings.sort(key=lambda f: -SEVERITY[f.severity])
     return findings
